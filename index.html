@@ -1,0 +1,812 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, useTransform, useMotionValue, useSpring, useMotionTemplate, AnimatePresence } from 'framer-motion';
+import { ArrowUpRight, Github, Linkedin, Dribbble, Mail, Code, Layers, Zap, Terminal, Plus, Image as ImageIcon, Maximize2, Globe, Cpu, Wifi, Monitor, Server, PenTool, Box } from 'lucide-react';
+
+/**
+ * UTILITIES & CONFIGURATION
+ * -------------------------
+ */
+const THEME = {
+  orange: '#FF6B00',
+  offWhite: '#FAFAFA',
+  textMain: '#111111',
+  textMuted: '#666666',
+};
+
+/**
+ * BACKGROUND COMPONENTS (Framer Motion)
+ * -----------------------------
+ */
+const GeometricShape = ({ className, style, animate, transition }) => (
+  <motion.div
+    className={`absolute border border-gray-900/5 ${className}`}
+    style={style}
+    animate={animate}
+    transition={transition}
+  />
+);
+
+const BackgroundScene = () => {
+  return (
+    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden bg-[#FAFAFA]">
+      <GeometricShape 
+        className="w-[800px] h-[800px] rounded-full top-[-20%] left-[-10%]"
+        animate={{ rotate: 360 }}
+        transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
+      />
+      <GeometricShape 
+        className="w-64 h-64 top-[40%] left-[10%] border-[#FF6B00]/10"
+        animate={{ 
+          y: [-20, 20, -20],
+          rotate: [0, 45, 0],
+          opacity: [0.1, 0.3, 0.1]
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.div 
+        className="absolute top-[20%] right-[-10%] w-[500px] h-[500px] border border-gray-900/5"
+        style={{ borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%' }}
+        animate={{ 
+          rotate: -360,
+          borderRadius: [
+            '60% 40% 30% 70% / 60% 30% 70% 40%',
+            '30% 60% 70% 40% / 50% 60% 30% 60%',
+            '60% 40% 30% 70% / 60% 30% 70% 40%'
+          ]
+        }}
+        transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+      />
+      <div 
+        className="absolute inset-0 opacity-[0.03]" 
+        style={{ 
+          backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', 
+          backgroundSize: '40px 40px' 
+        }} 
+      />
+    </div>
+  );
+};
+
+/**
+ * UI COMPONENTS
+ * -------------
+ */
+
+const CustomCursor = () => {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
+
+  useEffect(() => {
+    const updateMousePosition = (e) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleMouseOver = (e) => {
+      if (e.target.closest('button') || e.target.closest('a') || e.target.closest('.interactive')) {
+        setIsHovering(true);
+      } else {
+        setIsHovering(false);
+      }
+    };
+
+    window.addEventListener('mousemove', updateMousePosition);
+    window.addEventListener('mouseover', handleMouseOver);
+
+    return () => {
+      window.removeEventListener('mousemove', updateMousePosition);
+      window.removeEventListener('mouseover', handleMouseOver);
+    };
+  }, []);
+
+  return (
+    <motion.div
+      className="fixed top-0 left-0 z-50 pointer-events-none hidden md:block mix-blend-difference"
+      animate={{
+        x: mousePosition.x - (isHovering ? 24 : 8),
+        y: mousePosition.y - (isHovering ? 24 : 8),
+        width: isHovering ? 48 : 16,
+        height: isHovering ? 48 : 16,
+        backgroundColor: isHovering ? 'white' : '#FF6B00',
+        borderRadius: '50%',
+      }}
+      transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+    />
+  );
+};
+
+const FuturisticInput = ({ label, type = "text", isTextArea = false }) => {
+  const [focused, setFocused] = useState(false);
+  const [hasValue, setHasValue] = useState(false);
+
+  return (
+    <div className="relative group interactive">
+      {/* Floating Label */}
+      <div className={`absolute left-0 transition-all duration-300 font-mono text-xs tracking-widest uppercase pointer-events-none ${focused || hasValue ? '-top-6 text-[#FF6B00]' : 'top-4 text-gray-500'}`}>
+        {label}
+      </div>
+      
+      {isTextArea ? (
+        <textarea
+          onFocus={() => setFocused(true)}
+          onBlur={(e) => {
+            setFocused(false);
+            setHasValue(e.target.value !== '');
+          }}
+          className="w-full bg-transparent border-b border-gray-800 py-4 text-white font-sans text-xl focus:outline-none resize-none transition-colors duration-300 focus:border-[#FF6B00]/30"
+          rows={1}
+          style={{ minHeight: '3.5rem' }}
+          onInput={(e) => {
+            e.target.style.height = 'auto';
+            e.target.style.height = e.target.scrollHeight + 'px';
+          }}
+        />
+      ) : (
+        <input
+          type={type}
+          onFocus={() => setFocused(true)}
+          onBlur={(e) => {
+            setFocused(false);
+            setHasValue(e.target.value !== '');
+          }}
+          className="w-full bg-transparent border-b border-gray-800 py-4 text-white font-sans text-xl focus:outline-none transition-colors duration-300 focus:border-[#FF6B00]/30"
+        />
+      )}
+
+      {/* Active Line Animation */}
+      <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gray-800 overflow-hidden">
+        <motion.div
+          className="h-full bg-[#FF6B00]"
+          initial={{ x: '-100%' }}
+          animate={{ x: focused ? '0%' : '-101%' }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        />
+      </div>
+      
+      {/* HUD Corner Marker */}
+      <motion.div
+        className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#FF6B00]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: focused ? 1 : 0 }}
+      />
+    </div>
+  );
+};
+
+/**
+ * ANIMATED PROFESSIONAL WORKER COMPONENT
+ */
+const WorkingProfessional = () => {
+  return (
+    <div className="relative w-full max-w-[400px] h-[250px] mx-auto lg:mx-0 overflow-hidden">
+      <svg viewBox="0 0 400 300" className="w-full h-full">
+        <defs>
+          <clipPath id="avatarClip">
+            <circle cx="120" cy="110" r="45" />
+          </clipPath>
+          <linearGradient id="holoGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#FF6B00" stopOpacity="0" />
+            <stop offset="50%" stopColor="#FF6B00" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#FF6B00" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+
+        <motion.path 
+          d="M20,280 L380,280"
+          stroke="#333" strokeWidth="2"
+        />
+        <motion.path 
+          d="M80,280 L120,200 L300,200 L340,280"
+          fill="url(#holoGrad)"
+          opacity="0.3"
+          animate={{ opacity: [0.2, 0.4, 0.2] }}
+          transition={{ duration: 4, repeat: Infinity }}
+        />
+
+        <motion.path
+          d="M70,300 C70,220 170,220 170,300"
+          fill="#1A1A1A"
+          stroke="#333"
+          strokeWidth="1"
+        />
+        
+        <g clipPath="url(#avatarClip)">
+          <image 
+            href="WhatsApp Image 2025-09-22 at 21.57.47.jpeg" 
+            x="75" y="65" width="90" height="90" 
+            preserveAspectRatio="xMidYMid slice"
+          />
+          <rect x="75" y="65" width="90" height="90" fill="#FF6B00" fillOpacity="0.1" />
+        </g>
+        <motion.circle 
+          cx="120" cy="110" r="46" 
+          stroke="#FF6B00" strokeWidth="2" fill="none"
+          strokeDasharray="10 5"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          opacity="0.5"
+        />
+
+        <motion.path 
+          d="M90,240 Q130,260 160,250"
+          stroke="#333" strokeWidth="8" strokeLinecap="round"
+          animate={{ d: ["M90,240 Q130,260 160,250", "M90,240 Q130,255 160,255", "M90,240 Q130,260 160,250"] }}
+          transition={{ duration: 0.2, repeat: Infinity, repeatType: "reverse" }}
+        />
+        
+        <motion.path 
+          d="M110,240 Q150,260 190,250"
+          stroke="#666" strokeWidth="8" strokeLinecap="round"
+          animate={{ d: ["M110,240 Q150,260 190,250", "M110,240 Q150,255 190,255", "M110,240 Q150,260 190,250"] }}
+          transition={{ duration: 0.15, repeat: Infinity, repeatType: "reverse", delay: 0.05 }}
+        />
+
+        <motion.rect
+          x="220" y="80" width="140" height="90" rx="4"
+          fill="#111" stroke="#FF6B00" strokeWidth="1"
+          strokeOpacity="0.5"
+          initial={{ y: 0 }}
+          animate={{ y: [-5, 5, -5] }}
+          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.g 
+           initial={{ y: 0 }}
+           animate={{ y: [-5, 5, -5] }}
+           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+        >
+            <line x1="230" y1="100" x2="300" y2="100" stroke="#666" strokeWidth="2" />
+            <line x1="230" y1="115" x2="340" y2="115" stroke="#666" strokeWidth="2" />
+            <line x1="230" y1="130" x2="280" y2="130" stroke="#FF6B00" strokeWidth="2" />
+            <line x1="230" y1="145" x2="320" y2="145" stroke="#666" strokeWidth="2" />
+        </motion.g>
+
+        <motion.rect
+          x="320" y="150" width="70" height="50" rx="4"
+          fill="#111" stroke="#444" strokeWidth="1"
+          initial={{ y: 0 }}
+          animate={{ y: [5, -5, 5] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+        />
+
+        <motion.path
+          d="M170,110 L220,125"
+          stroke="#FF6B00" strokeWidth="1" strokeDasharray="4 4"
+          opacity="0.3"
+          animate={{ strokeDashoffset: [0, -8] }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+        />
+      </svg>
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent to-[#FF6B00]/5 pointer-events-none" />
+    </div>
+  );
+};
+
+/**
+ * INTERACTIVE PROFILE CARD
+ */
+const ProfileCard = () => {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const mouseX = useSpring(x, { stiffness: 150, damping: 15 });
+  const mouseY = useSpring(y, { stiffness: 150, damping: 15 });
+
+  const rotateX = useTransform(mouseY, [-0.5, 0.5], [15, -15]);
+  const rotateY = useTransform(mouseX, [-0.5, 0.5], [-15, 15]);
+  const textX = useTransform(mouseX, [-0.5, 0.5], [20, -20]);
+  const textY = useTransform(mouseY, [-0.5, 0.5], [20, -20]);
+  const imageX = useTransform(mouseX, [-0.5, 0.5], [-10, 10]);
+  const imageY = useTransform(mouseY, [-0.5, 0.5], [-10, 10]);
+  const badgeX = useTransform(mouseX, [-0.5, 0.5], [-25, 25]);
+  const badgeY = useTransform(mouseY, [-0.5, 0.5], [-25, 25]);
+
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    const xPct = (e.clientX - rect.left) / width - 0.5;
+    const yPct = (e.clientY - rect.top) / height - 0.5;
+    x.set(xPct);
+    y.set(yPct);
+  };
+
+  const handleMouseLeave = () => {
+    x.set(0);
+    y.set(0);
+  };
+
+  return (
+    <motion.div 
+      className="relative w-full max-w-[420px] mx-auto aspect-[3/4] perspective-1000 interactive"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      style={{ perspective: 1200 }}
+    >
+      <motion.div
+        style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
+        className="relative w-full h-full bg-[#1A1A1A] rounded-[30px] overflow-hidden shadow-2xl"
+      >
+        <div 
+          className="absolute inset-0 opacity-20 pointer-events-none z-0" 
+          style={{ backgroundImage: 'linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)', backgroundSize: '30px 30px' }} 
+        />
+        <motion.div 
+          style={{ x: textX, y: textY, z: 20, transformStyle: "preserve-3d" }}
+          className="absolute inset-0 flex flex-col justify-center items-center pointer-events-none z-10 select-none"
+        >
+          <div className="w-full flex justify-between px-4 opacity-10">
+             <span className="text-8xl font-bold text-white tracking-tighter" style={{ fontFamily: 'Space Grotesk' }}>UI</span>
+          </div>
+          <div className="w-full flex justify-end px-4 mt-32 opacity-10">
+             <span className="text-6xl font-bold text-white tracking-tighter" style={{ fontFamily: 'Space Grotesk' }}>DEV</span>
+          </div>
+        </motion.div>
+        <motion.div
+          style={{ x: imageX, y: imageY, z: 50, transformStyle: "preserve-3d" }}
+          className="absolute inset-4 z-20 rounded-2xl overflow-hidden bg-gradient-to-b from-gray-800 to-black border border-white/10"
+        >
+          <img 
+            src="WhatsApp Image 2025-09-22 at 21.57.47.jpeg" 
+            alt="Syafiq Siregar" 
+            className="w-full h-full object-cover grayscale contrast-125 hover:grayscale-0 transition-all duration-700"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80" />
+        </motion.div>
+        <motion.div 
+          style={{ z: 60, transformStyle: "preserve-3d" }}
+          className="absolute bottom-12 left-8 z-30 pointer-events-none"
+        >
+          <h3 className="text-white text-3xl font-bold tracking-tight leading-none mb-1">SYAFIQ<br/>SIREGAR</h3>
+          <p className="text-[#FF6B00] font-mono text-sm tracking-widest uppercase">Hybrid Designer</p>
+        </motion.div>
+        <motion.div
+          style={{ x: badgeX, y: badgeY, z: 80, transformStyle: "preserve-3d" }}
+          className="absolute bottom-8 right-8 z-40"
+        >
+          <div className="w-20 h-20 bg-[#FF6B00] rounded-full flex items-center justify-center shadow-lg shadow-orange-500/30 group cursor-pointer hover:scale-110 transition-transform">
+             <span className="text-white font-bold text-2xl group-hover:rotate-12 transition-transform duration-300">Hi</span>
+          </div>
+        </motion.div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+/**
+ * FUTURISTIC WORK SECTION
+ */
+const WorkSlot = ({ id, label, role, year, index }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <motion.div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className="relative w-full border-t border-gray-300 group cursor-pointer overflow-hidden interactive"
+      initial={false}
+      animate={{ 
+        height: isHovered ? 480 : 100,
+        backgroundColor: isHovered ? '#111111' : 'transparent'
+      }}
+      transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
+    >
+      <div className="relative z-10 w-full h-full flex flex-col p-6 md:p-8">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-8">
+            <span className={`font-mono text-sm ${isHovered ? 'text-[#FF6B00]' : 'text-gray-400'} transition-colors duration-300`}>
+              {id}
+            </span>
+            <h3 className={`text-3xl md:text-4xl font-bold tracking-tight ${isHovered ? 'text-white' : 'text-gray-900'} transition-colors duration-300`}>
+              {label}
+            </h3>
+          </div>
+          
+          <div className={`hidden md:flex items-center gap-12 font-mono text-xs uppercase tracking-widest ${isHovered ? 'text-gray-400' : 'text-gray-500'} transition-colors duration-300`}>
+            <span>{role}</span>
+            <span>{year}</span>
+            <motion.div
+              animate={{ rotate: isHovered ? 45 : 0 }}
+              className={`p-2 rounded-full border ${isHovered ? 'border-[#FF6B00] text-[#FF6B00]' : 'border-gray-300 text-gray-900'}`}
+            >
+              <ArrowUpRight size={16} />
+            </motion.div>
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {isHovered && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ delay: 0.1, duration: 0.4 }}
+              className="flex-1 mt-8 w-full relative rounded-lg border border-dashed border-gray-700 bg-gray-900/50 flex items-center justify-center overflow-hidden"
+            >
+              <div className="absolute top-4 left-4 w-2 h-2 border-t border-l border-[#FF6B00]" />
+              <div className="absolute top-4 right-4 w-2 h-2 border-t border-r border-[#FF6B00]" />
+              <div className="absolute bottom-4 left-4 w-2 h-2 border-b border-l border-[#FF6B00]" />
+              <div className="absolute bottom-4 right-4 w-2 h-2 border-b border-r border-[#FF6B00]" />
+              
+              <div className="text-center group-hover:scale-105 transition-transform duration-500">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800 flex items-center justify-center text-gray-500">
+                  <ImageIcon size={24} />
+                </div>
+                <h4 className="text-gray-400 font-mono text-sm uppercase tracking-widest mb-2">Project Asset Empty</h4>
+                <p className="text-gray-600 text-xs font-mono">[ WAITING FOR DATA UPLOAD ]</p>
+                
+                <button className="mt-6 px-6 py-2 border border-[#FF6B00] text-[#FF6B00] text-xs font-bold uppercase tracking-widest hover:bg-[#FF6B00] hover:text-white transition-all">
+                  Insert Media
+                </button>
+              </div>
+
+              <div 
+                className="absolute inset-0 opacity-5 pointer-events-none" 
+                style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '16px 16px' }} 
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+      
+      {isHovered && (
+        <motion.div 
+          layoutId="activeBackground"
+          className="absolute bottom-0 left-0 w-full h-[1px] bg-[#FF6B00] shadow-[0_0_20px_#FF6B00]"
+        />
+      )}
+    </motion.div>
+  );
+};
+
+const FuturisticWorkSection = () => {
+  const slots = [
+    { id: '01', label: 'PROJECT_SLOT_ALPHA', role: 'DESIGN SYSTEM', year: '2025' },
+    { id: '02', label: 'PROJECT_SLOT_BETA', role: 'FULL STACK', year: '2024' },
+    { id: '03', label: 'PROJECT_SLOT_GAMMA', role: 'MOBILE APP', year: '2024' },
+    { id: '04', label: 'PROJECT_SLOT_DELTA', role: 'BRANDING', year: '2023' },
+  ];
+
+  return (
+    <div className="w-full">
+      <div className="flex flex-col gap-0 border-b border-gray-300">
+        {slots.map((slot, i) => (
+          <WorkSlot key={slot.id} {...slot} index={i} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * INTERACTIVE CAPABILITY CARD COMPONENT
+ */
+const CapabilityCard = ({ title, desc, icon, color, glowColor }) => {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+
+  function handleMouseMove({ currentTarget, clientX, clientY }) {
+    const { left, top } = currentTarget.getBoundingClientRect();
+    mouseX.set(clientX - left);
+    mouseY.set(clientY - top);
+  }
+
+  return (
+    <div 
+      className="group relative h-full rounded-2xl border border-gray-800 bg-[#1A1A1A] overflow-hidden interactive"
+      onMouseMove={handleMouseMove}
+    >
+      {/* Dynamic Mouse Spotlight */}
+      <motion.div
+        className="pointer-events-none absolute -inset-px rounded-xl opacity-0 transition duration-300 group-hover:opacity-100"
+        style={{
+          background: useMotionTemplate`
+            radial-gradient(
+              600px circle at ${mouseX}px ${mouseY}px,
+              ${glowColor}15,
+              transparent 80%
+            )
+          `
+        }}
+      />
+      
+      <div className="relative p-6 h-full flex flex-col justify-between z-10">
+         <div>
+          {/* Icon Container with subtle color shadow */}
+          <div 
+            className={`w-12 h-12 rounded-lg flex items-center justify-center mb-6 transition-transform duration-300 group-hover:scale-110 ${color}`}
+            style={{ boxShadow: `0 0 20px ${glowColor}10` }}
+          >
+            {icon}
+          </div>
+          
+          <h4 className="text-white text-xl font-bold mb-3">{title}</h4>
+          <p className="text-gray-500 text-sm leading-relaxed group-hover:text-gray-400 transition-colors">{desc}</p>
+        </div>
+        
+        {/* Color Accent Indicator */}
+        <div className="flex justify-end mt-4">
+             <div className="w-8 h-1 rounded-full opacity-20 group-hover:opacity-100 transition-opacity duration-500" style={{ backgroundColor: glowColor }} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CAPABILITIES_DATA = [
+  {
+    title: "Frontend Engineering",
+    desc: "Building performant, accessible web applications with modern React ecosystems.",
+    icon: <Monitor size={20} />,
+    color: "bg-blue-500/10 text-blue-500",
+    glowColor: "#3B82F6"
+  },
+  {
+    title: "UI/UX Design",
+    desc: "Crafting intuitive interfaces and comprehensive design systems in Figma.",
+    icon: <PenTool size={20} />,
+    color: "bg-purple-500/10 text-purple-500",
+    glowColor: "#A855F7"
+  },
+   {
+    title: "Motion & 3D",
+    desc: "Adding depth and life to digital experiences via WebGL and Framer Motion.",
+    icon: <Box size={20} />,
+    color: "bg-orange-500/10 text-orange-500",
+    glowColor: "#F97316"
+  },
+  {
+    title: "Backend Systems",
+    desc: "Architecting scalable server-side logic and database integrations.",
+    icon: <Server size={20} />,
+    color: "bg-green-500/10 text-green-500",
+    glowColor: "#22C55E"
+  }
+];
+
+/**
+ * MAIN APP COMPONENT
+ * ------------------
+ */
+export default function App() {
+  useEffect(() => {
+    document.documentElement.style.scrollBehavior = 'smooth';
+    return () => {
+      document.documentElement.style.scrollBehavior = 'auto';
+    };
+  }, []);
+
+  return (
+    <div className="relative min-h-screen bg-[#FAFAFA] text-[#111111] font-sans selection:bg-[#FF6B00] selection:text-white overflow-hidden">
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+        
+        body {
+          font-family: 'Inter', sans-serif;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+          font-family: 'Space Grotesk', sans-serif;
+        }
+      `}</style>
+      <CustomCursor />
+      <BackgroundScene />
+
+      {/* Navigation */}
+      <nav className="fixed top-0 w-full p-6 md:p-10 flex justify-between items-center z-40 mix-blend-difference text-white pointer-events-none">
+        <div className="font-bold text-xl tracking-tighter pointer-events-auto" style={{ fontFamily: 'Space Grotesk, sans-serif' }}>HYBRID.ID</div>
+        <div className="hidden md:flex gap-8 font-mono text-sm pointer-events-auto">
+          <a href="#work" className="hover:text-[#FF6B00] transition-colors interactive">WORK</a>
+          <a href="#about" className="hover:text-[#FF6B00] transition-colors interactive">ABOUT</a>
+          <a href="#contact" className="hover:text-[#FF6B00] transition-colors interactive">CONTACT</a>
+        </div>
+        <button className="md:hidden pointer-events-auto text-black bg-white p-2 rounded">
+            Menu
+        </button>
+      </nav>
+
+      <main className="relative z-10 px-6 md:px-12 lg:px-24">
+        
+        {/* HERO SECTION */}
+        <section className="min-h-screen pt-32 pb-20 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="lg:col-span-5 flex flex-col justify-center">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <h1 className="text-5xl md:text-7xl font-bold leading-[0.95] tracking-tighter mb-8">
+                Engineering <br/> Logic. <br/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] to-orange-600">
+                  Designing Emotion.
+                </span>
+              </h1>
+              <p className="text-lg text-gray-500 max-w-md mb-10 leading-relaxed">
+                A multi-disciplinary UI/UX Designer and Software Engineer building products that feel alive.
+              </p>
+              
+              <div className="flex gap-4">
+                <button className="px-8 py-4 bg-[#FF6B00] text-white font-bold rounded-lg hover:bg-black transition-colors interactive">
+                  View Projects
+                </button>
+                <button className="px-8 py-4 border border-gray-300 rounded-lg hover:border-black transition-colors interactive">
+                  Contact Me
+                </button>
+              </div>
+
+              {/* Stack Mini-Ticker */}
+              <div className="mt-16 pt-8 border-t border-gray-200">
+                <p className="text-xs font-mono text-gray-400 mb-4 uppercase tracking-widest">Core Stack</p>
+                <div className="flex gap-6 text-gray-400 grayscale hover:grayscale-0 transition-all duration-500">
+                   <div className="flex items-center gap-2"><div className="w-2 h-2 bg-black rounded-full"/>Next.js</div>
+                   <div className="flex items-center gap-2"><div className="w-2 h-2 bg-blue-500 rounded-full"/>React</div>
+                   <div className="flex items-center gap-2"><div className="w-2 h-2 bg-purple-500 rounded-full"/>Framer</div>
+                   <div className="flex items-center gap-2"><div className="w-2 h-2 bg-green-500 rounded-full"/>Node</div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          <div className="lg:col-span-7 relative h-full flex items-center justify-center lg:justify-end">
+            <ProfileCard />
+          </div>
+        </section>
+
+        {/* WORK SECTION */}
+        <section id="work" className="py-24">
+          <div className="flex items-end justify-between mb-20">
+            <div>
+              <h2 className="text-6xl md:text-8xl font-bold tracking-tighter leading-none mb-4">
+                SELECTED <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] to-orange-600">OUTPUTS</span>
+              </h2>
+              <div className="flex items-center gap-2 text-[#FF6B00] font-mono text-xs tracking-widest uppercase">
+                 <div className="w-2 h-2 bg-[#FF6B00] animate-pulse" />
+                 System Archives // Read-Only
+              </div>
+            </div>
+            <div className="hidden md:block w-32 h-[1px] bg-gray-300 mb-4" />
+          </div>
+          
+          <FuturisticWorkSection />
+        </section>
+
+        {/* EXPERIENCE & PHILOSOPHY */}
+        <section id="about" className="py-24 border-t border-gray-200">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+            <div className="lg:col-span-4">
+               <h2 className="text-3xl font-bold tracking-tighter mb-8">The Hybrid <br/>Approach</h2>
+               <p className="text-gray-500 leading-relaxed mb-6">
+                 I don't just hand off designs. I build them. Understanding the constraints of engineering allows me to push the boundaries of design, resulting in products that are both beautiful and performant.
+               </p>
+            </div>
+            <div className="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-12">
+              <div>
+                <h3 className="text-sm font-mono uppercase tracking-widest text-[#FF6B00] mb-6">Experience</h3>
+                <ul className="space-y-8 border-l border-gray-200 pl-8">
+                  <li className="relative">
+                    <div className="absolute -left-[37px] top-1 w-4 h-4 rounded-full border-2 border-[#FF6B00] bg-white" />
+                    <div className="text-sm text-gray-400 mb-1">2023 - Present</div>
+                    <div className="font-bold text-lg">Senior Design Engineer</div>
+                    <div className="text-gray-600">TechFlow Systems</div>
+                  </li>
+                  <li className="relative">
+                    <div className="absolute -left-[37px] top-1 w-4 h-4 rounded-full border-2 border-gray-300 bg-white" />
+                    <div className="text-sm text-gray-400 mb-1">2021 - 2023</div>
+                    <div className="font-bold text-lg">Frontend Developer</div>
+                    <div className="text-gray-600">Creative Agency X</div>
+                  </li>
+                  <li className="relative">
+                    <div className="absolute -left-[37px] top-1 w-4 h-4 rounded-full border-2 border-gray-300 bg-white" />
+                    <div className="text-sm text-gray-400 mb-1">2019 - 2021</div>
+                    <div className="font-bold text-lg">UI Designer</div>
+                    <div className="text-gray-600">Freelance</div>
+                  </li>
+                </ul>
+              </div>
+
+              {/* UPDATED CAPABILITIES SECTION WITH SPOTLIGHT GLOW */}
+              <div>
+                <h3 className="text-sm font-mono uppercase tracking-widest text-[#FF6B00] mb-6">Capabilities</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {CAPABILITIES_DATA.map((cap, i) => (
+                    <CapabilityCard key={i} {...cap} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* UPDATED: FUTURISTIC CONTACT SECTION WITH ANIMATION */}
+        <section id="contact" className="py-24 mb-20">
+          <div className="bg-[#0A0A0A] text-[#FAFAFA] rounded-[32px] p-8 md:p-12 lg:p-20 relative overflow-hidden shadow-2xl">
+            {/* Grid Background */}
+            <div className="absolute inset-0 opacity-10 pointer-events-none" 
+                 style={{ 
+                   backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', 
+                   backgroundSize: '40px 40px' 
+                 }} 
+            />
+            
+            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24">
+              {/* Left Column: Header & Info & ANIMATION */}
+              <div className="flex flex-col justify-between">
+                <div>
+                   <div className="flex items-center gap-2 text-[#FF6B00] font-mono text-xs tracking-widest uppercase mb-6">
+                     <span className="w-2 h-2 bg-[#FF6B00] rounded-full animate-pulse" />
+                     System Online
+                   </div>
+                   <h2 className="text-5xl md:text-7xl font-bold tracking-tighter leading-none mb-6">
+                     Let's start a <br/>
+                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] to-orange-500">
+                       Revolution.
+                     </span>
+                   </h2>
+                   
+                   {/* ANIMATED PROFESSIONAL */}
+                   <div className="mb-6 -ml-4">
+                      <WorkingProfessional />
+                   </div>
+
+                   <p className="text-gray-400 text-lg max-w-md leading-relaxed">
+                     Have a visionary idea? I'm currently accepting new commissions for 2024. Let's build something that defies expectations.
+                   </p>
+                </div>
+
+                <div className="hidden lg:block space-y-8 mt-8">
+                   <div className="p-6 border border-white/10 rounded-xl bg-white/5 backdrop-blur-sm">
+                     <h4 className="text-xs font-mono text-gray-400 uppercase tracking-widest mb-4">Direct Channel</h4>
+                     <div className="flex items-center justify-between group cursor-pointer interactive">
+                       <span className="text-2xl font-bold font-sans">hello@hybrid.id</span>
+                       <ArrowUpRight className="text-[#FF6B00] group-hover:rotate-45 transition-transform" />
+                     </div>
+                   </div>
+                   <div className="flex gap-4 text-xs font-mono text-gray-500">
+                     <span className="flex items-center gap-1"><Globe size={12}/> INDONESIA</span>
+                     <span className="flex items-center gap-1"><Cpu size={12}/> V.1.0.4</span>
+                     <span className="flex items-center gap-1"><Wifi size={12}/> SECURE</span>
+                   </div>
+                </div>
+              </div>
+
+              {/* Right Column: Interactive Form */}
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-8 md:p-10 shadow-2xl h-fit">
+                <form className="space-y-8">
+                  <FuturisticInput label="Identification Name" />
+                  <FuturisticInput label="Digital Address (Email)" type="email" />
+                  <FuturisticInput label="Mission Brief (Message)" isTextArea />
+                  
+                  <div className="pt-4">
+                    <button className="group relative w-full py-5 bg-[#FF6B00] text-black font-bold text-lg uppercase tracking-widest overflow-hidden interactive">
+                      <span className="relative z-10 flex items-center justify-center gap-3 group-hover:gap-6 transition-all duration-300">
+                        Transmit Data <ArrowUpRight size={20} />
+                      </span>
+                      <div className="absolute inset-0 bg-white transform translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out" />
+                    </button>
+                    <div className="flex justify-between mt-4 px-1">
+                       <span className="text-[10px] font-mono text-gray-600">ENCRYPTED PROTOCOL</span>
+                       <span className="text-[10px] font-mono text-gray-600">AVG RESPONSE: 24H</span>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      {/* FOOTER */}
+      <footer className="px-6 md:px-12 lg:px-24 py-12 border-t border-gray-200 bg-white relative z-10">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="text-sm text-gray-400">
+            © 2024 Hybrid Identity. All rights reserved.
+          </div>
+          <div className="flex gap-6">
+            <a href="#" className="p-2 bg-gray-100 rounded-full hover:bg-[#FF6B00] hover:text-white transition-colors interactive"><Github size={20} /></a>
+            <a href="#" className="p-2 bg-gray-100 rounded-full hover:bg-[#FF6B00] hover:text-white transition-colors interactive"><Linkedin size={20} /></a>
+            <a href="#" className="p-2 bg-gray-100 rounded-full hover:bg-[#FF6B00] hover:text-white transition-colors interactive"><Dribbble size={20} /></a>
+            <a href="#" className="p-2 bg-gray-100 rounded-full hover:bg-[#FF6B00] hover:text-white transition-colors interactive"><Mail size={20} /></a>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}
